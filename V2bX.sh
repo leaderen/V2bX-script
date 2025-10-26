@@ -96,7 +96,7 @@ before_show_menu() {
 }
 
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/leaderen/V2bX-script/master/install.sh)
+    bash <(curl -Ls https://raw.githubusercontent.com/leaderen/V2bX-script/8eb3055/install.sh)
     if [[ $? == 0 ]]; then
         if [[ $# == 0 ]]; then
             start
@@ -112,7 +112,7 @@ update() {
     else
         version=$2
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/leaderen/V2bX-script/master/install.sh) $version
+    bash <(curl -Ls https://raw.githubusercontent.com/leaderen/V2bX-script/8eb3055/install.sh) $version
     if [[ $? == 0 ]]; then
         echo -e "${green}更新完成，已自动重启 V2bX，请使用 V2bX log 查看运行日志${plain}"
         exit
