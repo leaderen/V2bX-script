@@ -131,25 +131,39 @@ install_V2bX() {
     mkdir /usr/local/V2bX/ -p
     cd /usr/local/V2bX/
 
+    # 确保使用 leaderen/V2bX 仓库
+    V2BX_REPO="leaderen/V2bX"
+    
     if  [ $# == 0 ] ;then
-        last_version=$(curl -Ls "https://api.github.com/repos/leaderen/V2bX/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+        # 使用更可靠的方法获取最新版本
+        last_version=$(curl -Ls "https://api.github.com/repos/${V2BX_REPO}/releases/latest" 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+        # 如果上面的方法失败，尝试使用 jq（如果可用）
+        if [[ ! -n "$last_version" ]] && command -v jq &> /dev/null; then
+            last_version=$(curl -Ls "https://api.github.com/repos/${V2BX_REPO}/releases/latest" 2>/dev/null | jq -r '.tag_name // empty')
+        fi
+        # 如果还是失败，尝试直接从 HTML 页面获取（备用方案）
+        if [[ ! -n "$last_version" ]]; then
+            last_version=$(curl -Ls "https://github.com/${V2BX_REPO}/releases/latest" 2>/dev/null | grep -o 'releases/tag/[^"]*' | head -1 | sed 's/releases\/tag\///')
+        fi
         if [[ ! -n "$last_version" ]]; then
             echo -e "${red}检测 V2bX 版本失败，可能是超出 Github API 限制，请稍后再试，或手动指定 V2bX 版本安装${plain}"
+            echo -e "${yellow}提示：可以尝试手动指定版本，例如：bash install.sh v0.4.1${plain}"
             exit 1
         fi
         echo -e "检测到 V2bX 最新版本：${last_version}，开始安装"
-        wget --no-check-certificate -N --progress=bar -O /usr/local/V2bX/V2bX-linux.zip https://github.com/leaderen/V2bX/releases/download/${last_version}/V2bX-linux-${arch}.zip
+        wget --no-check-certificate -N --progress=bar -O /usr/local/V2bX/V2bX-linux.zip https://github.com/${V2BX_REPO}/releases/download/${last_version}/V2bX-linux-${arch}.zip
         if [[ $? -ne 0 ]]; then
             echo -e "${red}下载 V2bX 失败，请确保你的服务器能够下载 Github 的文件${plain}"
             exit 1
         fi
     else
         last_version=$1
-        url="https://github.com/leaderen/V2bX/releases/download/${last_version}/V2bX-linux-${arch}.zip"
+        url="https://github.com/${V2BX_REPO}/releases/download/${last_version}/V2bX-linux-${arch}.zip"
         echo -e "开始安装 V2bX $1"
         wget --no-check-certificate -N --progress=bar -O /usr/local/V2bX/V2bX-linux.zip ${url}
         if [[ $? -ne 0 ]]; then
             echo -e "${red}下载 V2bX $1 失败，请确保此版本存在${plain}"
+            echo -e "${yellow}提示：请确认版本号正确，例如：v0.4.1${plain}"
             exit 1
         fi
     fi
